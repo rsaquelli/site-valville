@@ -5,10 +5,12 @@ import {
   infrastructure,
   links,
   pillars,
-  previewNews,
   restrictedSystems,
   spotlight,
 } from "@/src/lib/site-content.mjs";
+import { getNoticias, getProjetos, rotuloEnum } from "@/src/lib/public-site-api";
+
+export const dynamic = "force-dynamic";
 
 function ArrowIcon() {
   return (
@@ -18,7 +20,11 @@ function ArrowIcon() {
   );
 }
 
-export default function HomePage() {
+export default async function HomePage() {
+  const [noticias, projetos] = await Promise.all([getNoticias(), getProjetos()]);
+  const destaquesNoticias = noticias.slice(0, 3);
+  const destaquesProjetos = projetos.filter((item) => item.destaqueHome).slice(0, 3);
+
   return (
     <main>
       <header className="site-header">
@@ -30,7 +36,21 @@ export default function HomePage() {
           <a href="#valville">O Valville</a>
           <a href="#estrutura">Estrutura</a>
           <a href="#novidades">Novidades</a>
-          <a href="#contato">Contato</a>
+          <a href="/projetos">Projetos</a>
+          <details className="institutional-menu">
+            <summary>Institucional <span aria-hidden="true">⌄</span></summary>
+            <div className="institutional-menu-panel">
+              <span className="institutional-menu-label">Institucional</span>
+              <a href="/gestao">
+                <strong>Diretoria e Conselho</strong>
+                <small>Conheça os órgãos de gestão do Valville</small>
+              </a>
+              <a href="/documentos">
+                <strong>Documentos Públicos</strong>
+                <small>Estatuto, regulamentos, atas e documentos</small>
+              </a>
+            </div>
+          </details>
         </nav>
 
         <div className="header-actions">
@@ -191,38 +211,63 @@ export default function HomePage() {
             <h2>Novidades do Valville</h2>
           </div>
           <p>
-            Na próxima etapa, esta área será administrada diretamente pelo App Operações, sem necessidade de alterar o site.
+            Notícias, comunicados e informações institucionais publicados diretamente pela Administração.
           </p>
         </div>
-        <div className="news-grid">
-          {previewNews.map((item) => (
-            <article className="news-card" key={item.title}>
-              <span>{item.category}</span>
-              <h3>{item.title}</h3>
-              <p>{item.text}</p>
-              <small>Prévia de conteúdo</small>
-            </article>
-          ))}
+
+        {destaquesNoticias.length ? (
+          <div className="news-grid">
+            {destaquesNoticias.map((item) => (
+              <a className="news-card news-card-link" href={`/novidades/${item.slug}`} key={item.id}>
+                <span>{rotuloEnum(item.categoria)}</span>
+                <h3>{item.titulo}</h3>
+                <p>{item.resumo}</p>
+                <small>Leia mais →</small>
+              </a>
+            ))}
+          </div>
+        ) : (
+          <div className="public-empty">Nenhuma novidade pública no momento.</div>
+        )}
+
+        <div className="public-section-action">
+          <a className="text-link" href="/novidades">Ver todas as novidades <ArrowIcon /></a>
         </div>
       </section>
 
-      <section className="newsletter-section shell">
-        <div>
-          <span className="eyebrow light">Newsletter Valville</span>
-          <h2>Informação oficial, de forma simples.</h2>
-          <p>
-            Um novo canal para receber novidades, informações públicas e conteúdos relevantes da Associação.
-          </p>
-        </div>
-        <div className="newsletter-preview">
-          <span>Integração prevista para a próxima etapa</span>
-          <strong>Cadastro de newsletter</strong>
-          <p>O gerenciamento será feito pelo módulo de conteúdo do App Operações.</p>
-        </div>
-      </section>
+      {destaquesProjetos.length ? (
+        <section className="home-projects shell">
+          <div className="section-heading heading-row dark-text">
+            <div>
+              <span className="eyebrow">Evolução do residencial</span>
+              <h2>Projetos e melhorias</h2>
+            </div>
+            <p>Acompanhe iniciativas que ajudam a preservar e evoluir o Valville.</p>
+          </div>
+
+          <div className="public-project-grid">
+            {destaquesProjetos.map((item) => (
+              <a className="public-project-card" href={`/projetos/${item.slug}`} key={item.id}>
+                {item.imagemCapaUrl && <img src={item.imagemCapaUrl} alt="" />}
+                <div>
+                  <span>{rotuloEnum(item.categoria)}</span>
+                  <h3>{item.titulo}</h3>
+                  <p>{item.resumo}</p>
+                  <div className="public-progress"><i style={{ width: `${item.percentualAvanco}%` }} /></div>
+                  <small>{item.percentualAvanco}% concluído</small>
+                </div>
+              </a>
+            ))}
+          </div>
+
+          <div className="public-section-action">
+            <a className="text-link" href="/projetos">Ver todos os projetos <ArrowIcon /></a>
+          </div>
+        </section>
+      ) : null}
 
       <footer className="site-footer" id="contato">
-        <div className="shell footer-grid">
+        <div className="shell footer-grid footer-grid-institutional">
           <div className="footer-brand footer-address">
             <strong>Valville</strong>
             <span>{brand.fullName}</span>
@@ -244,6 +289,12 @@ export default function HomePage() {
               <a href={`mailto:${email}`} key={email}>{email}</a>
             ))}
             <a href={links.portal} target="_blank" rel="noreferrer">Portal do Morador</a>
+          </div>
+          <div className="footer-contact-block">
+            <span className="footer-label">Institucional</span>
+            <a href="/gestao">Diretoria e Conselho</a>
+            <a href="/projetos">Projetos e Melhorias</a>
+            <a href="/documentos">Documentos Públicos</a>
           </div>
         </div>
         <div className="shell footer-bottom">
